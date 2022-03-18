@@ -1,0 +1,100 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/andrea/Programs/go/progettoFineAnnoSiste/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210905.0/
+AccessToken	backend/main.go	/^	AccessToken string `json:"access_token"`$/;"	m	struct:main.OauthResp	typeref:typename:string
+Access_token	backend/token_handler.go	/^	Access_token  string `db:"accessToken"`$/;"	m	struct:main.actData	typeref:typename:string
+Conversations	mariadb/createTables.sql	/^CREATE TABLE Conversations ($/;"	t
+Date_of_join	backend/main.go	/^	Date_of_join string `db:"date_of_join"`$/;"	m	struct:main.UserData	typeref:typename:string
+Email	backend/login.go	/^	Email string `db:"email"`$/;"	m	struct:main.UsrLoginData	typeref:typename:string
+Email	backend/main.go	/^	Email        string `db:"email"`$/;"	m	struct:main.UserData	typeref:typename:string
+Email	backend/main.go	/^	Email string `json:"email"`$/;"	m	struct:main.UsrData	typeref:typename:string
+Exp	backend/token_handler.go	/^	Exp           int32  `db:"expireTime"`$/;"	m	struct:main.actData	typeref:typename:int32
+FriendRequests	mariadb/createTables.sql	/^CREATE TABLE FriendRequests ($/;"	t
+Id	backend/main.go	/^	Id           int    `db:"id"`$/;"	m	struct:main.UserData	typeref:typename:int
+LoginState	mariadb/createTables.sql	/^CREATE TABLE LoginState ($/;"	t
+MessageTable0	mariadb/createTables.sql	/^CREATE TABLE MessageTable0 ($/;"	t
+OauthResp	backend/main.go	/^type OauthResp struct {$/;"	s	package:main
+PHash	backend/login.go	/^	PHash string `db:"pHash"`$/;"	m	struct:main.UsrLoginData	typeref:typename:string
+PHash	backend/main.go	/^	PHash        string `db:"pHash"`$/;"	m	struct:main.UserData	typeref:typename:string
+RandomInt	backend/util.go	/^func RandomInt(n int) int {$/;"	f	package:main	typeref:typename:int
+RandomString	backend/util.go	/^func RandomString(n int) string {$/;"	f	package:main	typeref:typename:string
+Refresh_token	backend/token_handler.go	/^	Refresh_token string `db:"refreshToken"`$/;"	m	struct:main.actData	typeref:typename:string
+Salt	backend/login.go	/^	Salt  int    `db:"salt"`$/;"	m	struct:main.UsrLoginData	typeref:typename:int
+Salt	backend/main.go	/^	Salt         int    `db:"salt"`$/;"	m	struct:main.UserData	typeref:typename:int
+Token	mariadb/createTables.sql	/^CREATE TABLE Token ($/;"	t
+UserData	backend/main.go	/^type UserData struct {$/;"	s	package:main
+Username	backend/main.go	/^	Username     string `db:"username"`$/;"	m	struct:main.UserData	typeref:typename:string
+Users	mariadb/createTables.sql	/^CREATE TABLE Users ($/;"	t
+UsrData	backend/main.go	/^type UsrData struct {$/;"	s	package:main
+UsrLoginData	backend/login.go	/^type UsrLoginData struct {$/;"	s	package:main
+accessToken	mariadb/createTables.sql	/^    accessToken VARCHAR(64) NOT NULL,$/;"	E	table:Token
+accessTokenExists	backend/token_handler.go	/^func accessTokenExists(access_token string) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+accessTokenTest	backend/login.go	/^func accessTokenTest(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+accessTokenValid	backend/token_handler.go	/^func accessTokenValid(access_token string) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+actData	backend/token_handler.go	/^type actData struct {$/;"	s	package:main
+addState	backend/main.go	/^func addState(state string) error {$/;"	f	package:main	typeref:typename:error
+addUser	backend/db_interface.go	/^func addUser(username string, email string, password string) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+attachment	mariadb/createTables.sql	/^    attachment VARCHAR(100),$/;"	E	table:MessageTable0
+clientId	backend/main.go	/^var clientId string = ""$/;"	v	package:main	typeref:typename:string
+clientSecret	backend/main.go	/^var clientSecret string = ""$/;"	v	package:main	typeref:typename:string
+date_of_join	mariadb/createTables.sql	/^    date_of_join DATE NOT NULL,$/;"	E	table:Conversations
+date_of_join	mariadb/createTables.sql	/^    date_of_join DATE NOT NULL,$/;"	E	table:Users
+email	mariadb/createTables.sql	/^    email VARCHAR(100) NOT NULL,$/;"	E	table:Users
+expireTime	mariadb/createTables.sql	/^    expireTime INT NOT NULL,$/;"	E	table:Token
+findState	backend/main.go	/^func findState(state string) (string, error) {$/;"	f	package:main	typeref:typename:(string, error)
+generateTokenCouple	backend/token_handler.go	/^func generateTokenCouple(usrId int) (string, int32, string, error) {$/;"	f	package:main	typeref:typename:(string, int32, string, error)
+getOauthLink	backend/main.go	/^func getOauthLink(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+getUserData	backend/db_interface.go	/^func getUserData(usrId int) (string, string, string, error) {$/;"	f	package:main	typeref:typename:(string, string, string, error)
+getUserDataReq	backend/login.go	/^func getUserDataReq(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+getUserId	backend/token_handler.go	/^func getUserId(userEmail string) (int, error) {$/;"	f	package:main	typeref:typename:(int, error)
+getUserIdFromAccessToken	backend/token_handler.go	/^func getUserIdFromAccessToken(access_token string) (int, error) {$/;"	f	package:main	typeref:typename:(int, error)
+getUserIdFromRefreshToken	backend/token_handler.go	/^func getUserIdFromRefreshToken(refresh_token string) (int, error) {$/;"	f	package:main	typeref:typename:(int, error)
+handleRequests	backend/main.go	/^func handleRequests() {$/;"	f	package:main
+homePage	backend/main.go	/^func homePage(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+hostSite	backend/main.go	/^const hostSite = "https:\/\/localhost:8080\/"$/;"	c	package:main
+id	mariadb/createTables.sql	/^    id INT NOT NULL AUTO_INCREMENT,$/;"	E	table:FriendRequests
+id	mariadb/createTables.sql	/^    id INT NOT NULL AUTO_INCREMENT,$/;"	E	table:MessageTable0
+id	mariadb/createTables.sql	/^    id INT NOT NULL AUTO_INCREMENT,$/;"	E	table:Users
+id	mariadb/createTables.sql	/^    id INT NOT NULL,$/;"	E	table:Conversations
+idstring	mariadb/createTables.sql	/^    idstring VARCHAR(15) NOT NULL,$/;"	E	table:LoginState
+login	backend/login.go	/^func login(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+main	backend/db_interface.go	/^package main$/;"	p
+main	backend/login.go	/^package main$/;"	p
+main	backend/main.go	/^func main() {$/;"	f	package:main
+main	backend/main.go	/^package main$/;"	p
+main	backend/token_handler.go	/^package main$/;"	p
+main	backend/util.go	/^package main$/;"	p
+messageText	mariadb/createTables.sql	/^    messageText VARCHAR(1000) NOT NULL,$/;"	E	table:MessageTable0
+pHash	mariadb/createTables.sql	/^    pHash VARCHAR(64) NOT NULL,$/;"	E	table:Users
+paleoIdAuth	backend/main.go	/^func paleoIdAuth(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+participantId	mariadb/createTables.sql	/^    participantId INT NOT NULL,$/;"	E	table:Conversations
+password	frontend/fe/index.html	/^        <input type="password" name="password" id="password" placeholder="passowrd">$/;"	I
+reciverId	mariadb/createTables.sql	/^    reciverId INT NOT NULL,$/;"	E	table:FriendRequests
+redirectUri	backend/main.go	/^var redirectUri string = hostSite + "oauth"$/;"	v	package:main	typeref:typename:string
+refreshToken	mariadb/createTables.sql	/^    refreshToken VARCHAR(64) NOT NULL,$/;"	E	table:Token
+refreshTokenExists	backend/token_handler.go	/^func refreshTokenExists(refresh_token string) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+refreshTokenReq	backend/login.go	/^func refreshTokenReq(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+remState	backend/main.go	/^func remState(state string) error {$/;"	f	package:main	typeref:typename:error
+salt	mariadb/createTables.sql	/^    salt INT NOT NULL,$/;"	E	table:Users
+sendDate	mariadb/createTables.sql	/^    sendDate DATE NOT NULL,$/;"	E	table:MessageTable0
+senderId	mariadb/createTables.sql	/^    senderId INT NOT NULL,$/;"	E	table:FriendRequests
+senderId	mariadb/createTables.sql	/^    senderId INT NOT NULL,$/;"	E	table:MessageTable0
+signIn	backend/login.go	/^func signIn(w http.ResponseWriter, r *http.Request) {$/;"	f	package:main
+sqlServerIp	backend/main.go	/^const sqlServerIp = "172.18.0.1:3306"$/;"	c	package:main
+tokenCoupleAlreadyExists	backend/token_handler.go	/^func tokenCoupleAlreadyExists(usrId int) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+useRefreshToken	backend/token_handler.go	/^func useRefreshToken(refresh_token string) (string, int32, string, error) {$/;"	f	package:main	typeref:typename:(string, int32, string, error)
+userExists	backend/db_interface.go	/^func userExists(username string, email string) (bool, error) {$/;"	f	package:main	typeref:typename:(bool, error)
+userid	backend/oauthTokens.json	/^    "userid":"f6a5cceda6dc53dc6506a94b2f5f4ed1",$/;"	s
+userid	mariadb/createTables.sql	/^    userid INT NOT NULL,$/;"	E	table:Token
+username	frontend/fe/index.html	/^        <input type="text" name="username" id="username" placeholder="username">$/;"	I
+username	mariadb/createTables.sql	/^    username VARCHAR(100) NOT NULL,$/;"	E	table:Users
+usersecret	backend/oauthTokens.json	/^    "usersecret":"422c36d8fcc68a3d65bd42a3eb94a47ac7ea7621aab85e726a94b70b7b4022544d4cabd548c0ad/;"	s
+validate	backend/util.go	/^func validate(input string) string {$/;"	f	package:main	typeref:typename:string

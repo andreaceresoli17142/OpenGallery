@@ -1,0 +1,64 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>token fetch</title>
+</head>
+<body>
+    hii
+    <script>
+
+        function getCookie(cName) {
+			const name = cName + "=";
+			const cDecoded = decodeURIComponent(document.cookie); //to be careful
+			const cArr = cDecoded .split('; ');
+			let res;
+			cArr.forEach(val => {
+				if (val.indexOf(name) === 0) res = val.substring(name.length);
+			})
+			return res;
+		}
+
+		function setCookie(cName, cValue, expt) {
+			let date = new Date();
+			date.setTime(new Date(expt * 1000));
+			const expires = "expires=" + date.toUTCString();
+			document.cookie = cName + "=" + cValue + "; " + expires + "; path=/";
+		}
+
+        function init(){
+            state = getCookie("oauthState")
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+
+            fetch("http://localhost:8080/oauth/gettkcoup/" + state, requestOptions)
+            .then(response => response.text())
+            .then(result => {
+                console.log(result)
+                ret = JSON.parse(result)
+                if (ret.code != 200) {
+                    window.location.replace("../auth/login.html");
+                    return
+                }
+
+                setCookie( "act", ret.access_token, ret.act_expt )
+                setCookie( "rft", ret.refresh_token, ret.rft_expt )
+
+                setCookie( "oauthState", undefined, -1 )
+                console.log("hey dud")
+                window.location.replace("../privateArea/index.html");
+            })
+            .catch(error => console.log('error', error));
+        }
+
+        window.onload = init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+version: '3'
+services:
+  maria:
+    container_name: maria
+    restart: always
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: cere
+      MYSQL_PASSWORD: cere
+      MYSQL_DATABASE: useData
+    #build:
+    #  context: ./mariaDb
+    #  dockerfile: Dockerfile
+    volumes:
+      - './mariadb/conf/:/etc/mysql'
+      - './mariadb/data/:/var/lib/mysql'
+      - './mariadb/createTables.sql:/ct.sql'
+    ports:
+      - "3306:3306"
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+  frontend:
+    container_name: frontend
+    hostname: frontend
+    image: nginx:latest
+    volumes:
+      - './frontend/fe/:/usr/share/nginx/html'
+    # build:
+    #   context: ./frontend
+    #   dockerfile: Dockerfile
+    ports:
+      - 80:80

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+<!--===============================================================================================-->
+</head>
+<body>
+
+	<script>
+
+		function handleResults (result){
+			// console.log(result)
+			ret = JSON.parse(result)
+			if (ret.code != 200) {
+
+				document.getElementById("ret").innerHTML = `
+					<div class="alert alert-danger" role="alert">
+						${ret.msg}
+					</div>`
+				return
+			}
+			window.location.replace("./login.html");
+		}
+
+		function useOtp(otp, password){
+
+			var myHeaders = new Headers();
+			myHeaders.append("Authorization", "Bearer "+otp);
+			myHeaders.append("Content-Type", "application/json");
+
+			var raw = JSON.stringify({
+				"new_password": password
+			});
+
+			var requestOptions = {
+				method: 'POST',
+				headers: myHeaders,
+				body: raw,
+				redirect: 'follow'
+			};
+
+			fetch("http://localhost:8080/pwr/useotp", requestOptions)
+			.then(response => response.text())
+			.then(result => handleResults(result))
+			.catch(error => console.log('error', error));
+
+			return false
+		}
+
+		function submitForm(){
+			var otp = document.getElementById("otp").value
+			var password = document.getElementById("pass").value
+
+			if (password != document.getElementById("pass2").value){
+				document.getElementById("ret").innerHTML = `
+				<div class="alert alert-danger" role="alert">
+					passwords are not the same
+				</div>`
+				return
+			}
+
+			if (password == "" || otp == "" ){
+				document.getElementById("ret").innerHTML = `
+				<div class="alert alert-danger" role="alert">
+					you have to fill in all the fields
+				</div>`
+				return
+			}
+
+			useOtp(otp, password)
+			return
+		}
+
+	</script>
+
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100 p-l-50 p-r-50 p-t-77 p-b-30">
+				<form class="login100-form validate-form" onsubmit="submitForm(); return false;" >
+					<span class="login100-form-title p-b-55">
+						Change password
+					</span>
+
+					<div class="wrap-input100 validate-input m-b-16" data-validate = "Token is required">
+						<input class="input100" type="text" name="otp" id="otp" placeholder="Token">
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<span class="lnr lnr-envelope"></span>
+						</span>
+					</div>
+
+					<div class="wrap-input100 validate-input m-b-16" data-validate = "Password is required">
+						<input class="input100" type="password" name="pass" id="pass" placeholder="Password">
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<span class="lnr lnr-lock"></span>
+						</span>
+					</div>
+
+					<div class="wrap-input100 validate-input m-b-16" data-validate = "Password is required">
+						<input class="input100" type="password" name="pass" id="pass2" placeholder="Repeat password">
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<span class="lnr lnr-lock"></span>
+						</span>
+					</div>
+
+					<div id="ret" class="text-center w-full">
+
+					</div>
+
+					<div class="container-login100-form-btn p-t-25">
+						<button type="submit" class="login100-form-btn">
+							Change password
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<!--===============================================================================================-->
+<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+
+</body>
+</html>

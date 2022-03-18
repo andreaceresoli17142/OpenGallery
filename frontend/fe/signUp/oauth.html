@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Sign in</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/iconic/css/material-design-iconic-font.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animsition/css/animsition.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/daterangepicker/daterangepicker.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+<!--===============================================================================================-->
+</head>
+<body style="background-color: #999999;">
+
+	<script>
+
+
+
+		var checkBoxStatus = false;
+
+		$(document).on('click','#ckb1:checked',function(e){
+			checkBoxStatus = !checkBoxStatus;
+		});
+
+		function getCookie(cName) {
+			const name = cName + "=";
+			const cDecoded = decodeURIComponent(document.cookie); //to be careful
+			const cArr = cDecoded .split('; ');
+			let res;
+			cArr.forEach(val => {
+				if (val.indexOf(name) === 0) res = val.substring(name.length);
+			})
+			return res;
+		}
+
+		function setCookie(cName, cValue, expt) {
+			let date = new Date();
+			date.setTime(new Date(expt * 1000));
+			const expires = "expires=" + date.toUTCString();
+			document.cookie = cName + "=" + cValue + "; " + expires + "; path=/";
+		}
+
+		function submitForm(){
+
+			state = getCookie("oauthState")
+
+			if (state == undefined){
+				document.getElementById("ret").innerHTML = `
+					<div class="alert alert-danger" role="alert">
+						error registering to service, to go back to login <a href="../auth/login.html"> click here </a>
+					</div>`
+				// window.location.replace("../auth/login.html");
+				return false
+			}
+
+			if ( !checkBoxStatus ){
+				document.getElementById("ret").innerHTML = `
+					<div class="alert alert-danger" role="alert">
+						you need to agree to the terms of use
+					</div>`
+				return false
+			}
+
+			var password = document.getElementById("pass").value
+
+			if ( password != document.getElementById("r-pass").value ){
+				document.getElementById("ret").innerHTML = `
+					<div class="alert alert-danger" role="alert">
+						password and repeat password are different
+					</div>`
+				return false
+			}
+
+			var usr = document.getElementById("usr").value
+
+			// login(email, password)
+			var myHeaders = new Headers();
+			myHeaders.append("Content-Type", "application/json");
+
+			var raw = JSON.stringify({
+				"state": state,
+				"username": usr,
+				"password": password
+			});
+
+			var requestOptions = {
+				method: 'POST',
+				headers: myHeaders,
+				body: raw,
+				redirect: 'follow'
+			};
+
+			fetch("http://localhost:8080/oauth/signin", requestOptions)
+			.then(response => response.text())
+			.then(result => {
+				console.log(result)
+				ret = JSON.parse(result)
+				if (ret.code != 200) {
+					document.getElementById("ret").innerHTML = `
+						<div class="alert alert-danger" role="alert">
+							${ret.msg}
+						</div>`
+					return
+				}
+
+				setCookie( "act", ret.access_token, ret.act_expt )
+				setCookie( "rft", ret.refresh_token, ret.rft_expt )
+
+				setCookie( "oauthState", undefined, -1 )
+				window.location.replace("../privateArea/index.html");
+			})
+			.catch(error => console.log('error', error));
+			return false
+		}
+
+		function init() {
+            var form = document.getElementById("formS");
+			function handleForm(event) { event.preventDefault(); }
+			form.addEventListener('submit', handleForm);
+        }
+		document.addEventListener("DOMContentLoaded", init);
+
+	</script>
+
+	<div class="limiter">
+		<div class="container-login100">
+			<!-- <div class="login100-more" style="background-image: url('images/bg-01.jpg');"></div> -->
+			<div class="login100-more" style="background-image: url('images/bg.jpg');"></div>
+
+			<div class="wrap-login100 p-l-50 p-r-50 p-t-72 p-b-50">
+				<form id="formS" class="login100-form validate-form" onsubmit="false" action="#" >
+					<span class="login100-form-title p-b-59">
+						Oauth Sign Up
+					</span>
+
+					<div class="wrap-input100 validate-input" data-validate="Username is required">
+						<span class="label-input100">Username</span>
+						<input class="input100" type="text" name="username" id="usr" placeholder="Username...">
+						<span class="focus-input100"></span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate = "Password is required">
+						<span class="label-input100">Password</span>
+						<input class="input100" type="password" name="pass" id="pass" placeholder="*************">
+						<span class="focus-input100"></span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate = "Repeat Password is required">
+						<span class="label-input100">Repeat Password</span>
+						<input class="input100" type="password" name="repeat-pass" id="r-pass" placeholder="*************">
+						<span class="focus-input100"></span>
+					</div>
+
+					<div class="flex-m w-full p-b-33">
+						<div class="contact100-form-checkbox">
+							<input class="input-checkbox100" id="ckb1" type="checkbox" name="remember-me">
+							<label class="label-checkbox100" for="ckb1">
+								<span class="txt1">
+									I agree to the
+									<a href="../tos.html" class="txt2 hov1">
+										Terms of User
+									</a>
+								</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="container-login100-form-btn p-t-25" id="ret">
+					</div>
+
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button onclick="submitForm()" class="login100-form-btn">
+								Sign Up
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+<!--===============================================================================================-->
+	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/animsition/js/animsition.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/daterangepicker/moment.min.js"></script>
+	<script src="vendor/daterangepicker/daterangepicker.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/countdowntime/countdowntime.js"></script>
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+
+</body>
+</html>
