@@ -115,6 +115,12 @@ func httpSuccess(w *http.ResponseWriter, code int, s string) {
 	fmt.Fprintf((*w), `{"code": %d, "msg":"%s"}`, code, s)
 }
 
+func httpSuccessRaw(w *http.ResponseWriter, code int, s string) {
+	(*w).Header().Set("Content-Type", "application/json")
+	(*w).WriteHeader(code)
+	fmt.Fprint((*w), s)
+}
+
 func httpSuccessf(w *http.ResponseWriter, code int, s string, args ...interface{}) {
 	(*w).Header().Set("Content-Type", "application/json")
 	(*w).WriteHeader(code)

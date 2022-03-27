@@ -2,16 +2,8 @@ package main
 
 import ( // {{{
 
-	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
-	"errors"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 ) // }}}
@@ -139,78 +131,78 @@ func loadEnv() bool {
 	return true
 }
 
-func ExportRsaPrivateKeyAsPemStr(privkey *rsa.PrivateKey) string {
-	privkey_bytes := x509.MarshalPKCS1PrivateKey(privkey)
-	privkey_pem := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: privkey_bytes,
-		},
-	)
-	return string(privkey_pem)
-}
+// func ExportRsaPrivateKeyAsPemStr(privkey *rsa.PrivateKey) string {
+// 	privkey_bytes := x509.MarshalPKCS1PrivateKey(privkey)
+// 	privkey_pem := pem.EncodeToMemory(
+// 		&pem.Block{
+// 			Type:  "RSA PRIVATE KEY",
+// 			Bytes: privkey_bytes,
+// 		},
+// 	)
+// 	return string(privkey_pem)
+// }
 
-func ParseRsaPrivateKeyFromPemStr(privPEM string) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode([]byte(privPEM))
-	if block == nil {
-		return nil, errors.New("failed to parse PEM block containing the key")
-	}
+// func ParseRsaPrivateKeyFromPemStr(privPEM string) (*rsa.PrivateKey, error) {
+// 	block, _ := pem.Decode([]byte(privPEM))
+// 	if block == nil {
+// 		return nil, errors.New("failed to parse PEM block containing the key")
+// 	}
 
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
+// 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return priv, nil
-}
+// 	return priv, nil
+// }
 
-func rsa_Encrypt(secretMessage string, key rsa.PublicKey) (string, error) {
-	label := []byte("OAEP Encrypted")
-	rng := rand.Reader
-	ciphertext, err := rsa.EncryptOAEP(sha256.New(), rng, &key, []byte(secretMessage), label)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
+// func rsa_Encrypt(secretMessage string, key rsa.PublicKey) (string, error) {
+// 	label := []byte("OAEP Encrypted")
+// 	rng := rand.Reader
+// 	ciphertext, err := rsa.EncryptOAEP(sha256.New(), rng, &key, []byte(secretMessage), label)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+// }
 
-func rsa_Decrypt(cipherText string, privKey rsa.PrivateKey) (string, error) {
-	ct, _ := base64.StdEncoding.DecodeString(cipherText)
-	label := []byte("OAEP Encrypted")
-	rng := rand.Reader
-	plaintext, err := rsa.DecryptOAEP(sha256.New(), rng, &privKey, ct, label)
-	if err != nil {
-		return "", err
-	}
-	// fmt.Println("Plaintext:", string(plaintext))
-	return string(plaintext), nil
-}
+// func rsa_Decrypt(cipherText string, privKey rsa.PrivateKey) (string, error) {
+// 	ct, _ := base64.StdEncoding.DecodeString(cipherText)
+// 	label := []byte("OAEP Encrypted")
+// 	rng := rand.Reader
+// 	plaintext, err := rsa.DecryptOAEP(sha256.New(), rng, &privKey, ct, label)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	// fmt.Println("Plaintext:", string(plaintext))
+// 	return string(plaintext), nil
+// }
 
-func verifyRsaSignature(publicKey *rsa.PublicKey, keyString string) (string, error) {
+// func verifyRsaSignature(publicKey *rsa.PublicKey, keyString string) (string, error) {
 
-	dataSigPair := strings.Split(keyString, ".")
+// 	dataSigPair := strings.Split(keyString, ".")
 
-	getTkDigest := sha256.Sum256([]byte(dataSigPair[0]))
+// 	getTkDigest := sha256.Sum256([]byte(dataSigPair[0]))
 
-	decodedTk, _ := base64.StdEncoding.DecodeString(dataSigPair[1])
+// 	decodedTk, _ := base64.StdEncoding.DecodeString(dataSigPair[1])
 
-	err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, getTkDigest[:], decodedTk)
+// 	err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, getTkDigest[:], decodedTk)
 
-	if err != nil {
-		return "", err
-	}
-	return dataSigPair[0], nil
-}
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return dataSigPair[0], nil
+// }
 
-func generateRsaSignature(msg []byte, pk *rsa.PrivateKey) (string, error) {
+// func generateRsaSignature(msg []byte, pk *rsa.PrivateKey) (string, error) {
 
-	msgDigest := sha256.Sum256(msg)
+// 	msgDigest := sha256.Sum256(msg)
 
-	signature, err := rsa.SignPKCS1v15(rand.Reader, pk, crypto.SHA256, msgDigest[:])
+// 	signature, err := rsa.SignPKCS1v15(rand.Reader, pk, crypto.SHA256, msgDigest[:])
 
-	if err != nil {
-		return "", AppendError("error generating signture", err)
-	}
+// 	if err != nil {
+// 		return "", AppendError("error generating signture", err)
+// 	}
 
-	return base64.StdEncoding.EncodeToString(signature), nil
-}
+// 	return base64.StdEncoding.EncodeToString(signature), nil
+// }
