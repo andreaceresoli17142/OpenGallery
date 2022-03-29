@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>Ranking</title>
+</head>
+<body>
+
+    <script>
+        var myHeaders = new Headers();
+
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch("http://localhost:8080/art/getartworkranked", requestOptions)
+        .then(response => {
+
+            if (response.status === 404){
+                window.location.replace("404.html");
+                return
+            }
+            return response.text()
+        })
+        .then(result => {
+            var counti = 1
+            var marsh = JSON.parse(result)
+            marsh.forEach(element => {
+
+                document.getElementById("table").innerHTML += `
+                    <tr id="${counti}">
+                        <td>${counti}</td>
+                        <td class="ot">${element.OriginalTitle}</td>
+                        <td>${element.Artists[0]}</td>
+                        <td>${element.Likes}</td>
+                        <td>
+                            <button class="btn waves-effect waves-light" onclick="javascript:window.location='/artwork.html#${element.Id}';">
+                                go to page
+                                <i class="material-icons right">link</i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+                counti++
+            });
+        })
+        .catch(error => console.log(error));
+
+
+        pollingFunc();
+
+        async function pollingFunc(){
+            var myHeaders = new Headers();
+
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+
+            fetch("http://localhost:8080/art/getartworkranked", requestOptions)
+            .then(response => {
+
+                if (response.status === 404){
+                    window.location.replace("404.html");
+                    return
+                }
+                return response.text()
+            })
+            .then(result => {
+                var counti = 1
+                var marsh = JSON.parse(result)
+                marsh.forEach(element => {
+
+                    var tableElement = document.getElementById(counti)
+
+                    console.log(counti)
+                    console.log(element.OriginalTitle)
+                    console.log(tableElement.getElementsByClassName("ot")[0].innerHTML)
+
+                    if ( tableElement.getElementsByClassName("ot")[0].innerHTML == element.OriginalTitle ) {
+                        counti++
+                        return
+                    }
+
+                    console.log("doin stuff")
+
+                    tableElement.innerHTML = `
+                        <td>${counti}</td>
+                        <td class="ot">${element.OriginalTitle}</td>
+                        <td>${element.Artists[0]}</td>
+                        <td>${element.Likes}</td>
+                        <td>
+                            <button class="btn waves-effect waves-light" onclick="javascript:window.location='/artwork.html#${element.Id}';">
+                                go to page
+                                <i class="material-icons right">link</i>
+                            </button>
+                        </td>
+                    `
+                    counti++
+                });
+            })
+            .catch(error => console.log(error));
+
+            setTimeout(() => { pollingFunc(); }, 5000);
+        }
+
+    </script>
+
+    <table>
+        <thead>
+          <tr>
+            <th>rank</th>
+            <th>title</th>
+            <th>artist</th>
+            <th>likes</th>
+            <th>redir</th>
+          </tr>
+        </thead>
+
+        <tbody id="table">
+        </tbody>
+      </table>
+
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+</body>
+</html>

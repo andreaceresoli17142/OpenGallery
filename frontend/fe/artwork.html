@@ -23,12 +23,24 @@
         button, input, optgroup, select, textarea {
             font-family: GillSans, Calibri, Trebuchet, sans-serif;
         }
+        *.unselectable {
+            -moz-user-select: -moz-none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+
+            /*
+                Introduced in IE 10.
+                See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+            */
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .blockquote_teal {
+            border-left-color: rgb(2, 175, 175);
+        }
     </style>
 
     <script>
-
-        var offStar = `<i class="large material-icons grey-text text-darken-2" onclick="toggleLike()">star</i>`
-        var onStar = `<i class="large material-icons yellow-text text-darken-2" onclick="toggleLike()">star</i>`
 
         var websiteUrl = "http://localhost"
         var pageUrl = websiteUrl+"/artwork.html"
@@ -44,11 +56,19 @@
         };
 
         fetch("http://localhost:8080/art/getartwork/"+artworkid, requestOptions)
-        .then(response => response.text())
+        .then(response => {
+
+            if (response.status === 404){
+                window.location.replace("404.html");
+                return
+            }
+            return response.text()
+        })
         .then(result => handleReq(JSON.parse(result)))
-        .catch(error => console.log('error', error));
+        .catch(error => console.log(error));
 
         function handleReq(datArr){
+            // add titles
             document.title = "OpenGallery - "+datArr.OriginalTitle
 
             document.getElementById("title").innerHTML = datArr.OriginalTitle
@@ -56,18 +76,21 @@
                 document.getElementById("entitle").innerHTML = datArr.Title.String
             }
 
+            // get star status
             var requestOptions = {
                 method: 'GET',
                 headers: myHeaders,
-                redirect: 'follow'
+                redirect: 'follow',
+                credentials: 'include'
             };
 
-            fetch("http://localhost:8080/getlike/"+artworkid, requestOptions)
+            fetch("http://localhost:8080/getlikestatus/"+artworkid, requestOptions)
             .then(response => response.text())
             .then(result => handleLike(JSON.parse(result)))
             .catch(error => console.log('error', error));
 
 
+            // get all artists
             document.getElementById("artist").innerHTML = "Created by: "+datArr.Artists[0]
             if ( datArr.Artists.length != 1 ){
                 datArr.Artists.shift()
@@ -76,6 +99,7 @@
                 });
             }
 
+            // get artwork specifications
             document.getElementById("desc").innerHTML = datArr.Description
             document.getElementById("yc").innerHTML = "Created in: "+datArr.YearOfCreation
             document.getElementById("owner").innerHTML = "Owned by in: "+datArr.Owner
@@ -83,31 +107,114 @@
                 document.getElementById("bt").innerHTML = "Borrowed to: "+datArr.BorrowedTo.String
             }
 
+            // add picures to carousel
             datArr.Pictures.forEach(element => {
                 var imglink = websiteUrl + "/assets/" + element
                 document.getElementById("carousel").innerHTML += `<a class="carousel-item" href="${imglink}" target="_blank"><img src="${imglink}"></a>`
             });
 
+            // start carousel
             $(document).ready(function(){
                 $('.carousel').carousel();
             });
             $('.carousel.carousel-slider').carousel({ fullWidth: true, indicators: true});
+
+            loadComments()
+        }
+
+        function loadComments(){
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+
+            fetch("http://localhost:8080/comment/getall/"+artworkid, requestOptions)
+            .then(response => response.text())
+            .then(result => {
+                var marsh = JSON.parse(result)
+                if (marsh === null) {
+                    document.getElementById("comments").innerHTML = `
+                    <div class="flow-text">
+                        hey, no one has commented yet, you can be the first!
+                    </div>`
+                    return
+                }
+                document.getElementById("comments").innerHTML = ""
+                marsh.forEach(element => {
+                    document.getElementById("comments").innerHTML += `
+                    <blockquote class="flow-text blockquote_teal">
+                        ${element.text}
+                        <br>
+                        - &nbsp${element.usr}
+                    </blockquote>
+                    <br>`
+                });
+            })
+            .catch(error => console.log('error', error));
+        }
+
+        function postComment(){
+            var usrStr = document.getElementById("usrStr").value
+            var textStr = document.getElementById("textStr").value
+
+            if (usrStr == undefined || textStr == undefined){
+                return
+            }
+
+            const data = {
+                usr:usrStr,
+                text:textStr,
+            };
+
+            console.log(data)
+
+            const options = {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+
+            fetch("http://localhost:8080/comment/post/"+artworkid, options)
+            .then(response => response.text())
+            .then(result => {
+                var marsh = JSON.parse(result)
+                console.log(marsh)
+                comment = `<blockquote class="flow-text">${textStr}<br>- &nbsp${usrStr}</blockquote><br>`
+                if (marsh.code == 200) {
+                    if (document.getElementById("comments").Value == `
+                    <div class="flow-text">
+                        hey, no one has commented yet, you can be the first!
+                    </div>`){
+                        document.getElementById("comments").innerHTML = comment
+                    }
+                    document.getElementById("comments").innerHTML += comment
+                    return
+                }
+            })
+            .catch(error => {console.log('error', error)});
+
+            return false
         }
 
         function handleLike(resp){
-            console.log(resp)
             if (resp.Value){
-                document.getElementById("star").innerHTML = onStar
+                document.getElementById("star").classList.add('amber-text');
+                document.getElementById("star").classList.remove('grey-text')
                 return
             }
-            document.getElementById("star").innerHTML = offStar
+                document.getElementById("star").classList.add('grey-text');
+                document.getElementById("star").classList.remove('amber-text')
         }
 
         function toggleLike(){
             var requestOptions = {
                 method: 'POST',
                 headers: myHeaders,
-                redirect: 'follow'
+                redirect: 'follow',
+                credentials: 'include'
             };
 
             fetch("http://localhost:8080/togglelike/"+artworkid, requestOptions)
@@ -115,6 +222,10 @@
             .then(result => handleLike(JSON.parse(result)))
             .catch(error => console.log('error', error));
         }
+
+        $("#test_form").submit(function(e) {
+            e.preventDefault();
+        });
     </script>
 </head>
 <body>
@@ -123,13 +234,18 @@
 
     <div class="container" id="content">
         <div class="row center-align valign-wrapper">
-                <div class="col s1 valign-wrapper right-align" id="star">
+                <div class="col s1 valign-wrapper right-align">
+                    <i id="star" class="unselectable large material-icons grey-text text-darken-5" onclick="toggleLike()">star</i>
                 </div>
-                <div id="titles" class="col s6">
-                    <h1 id="title"></h1>
-                    <h4 id="entitle" class="grey-text text-darken"></h4>
+                <div id="titles" class="center-align" style="padding: 30px;">
+                    <div class="center-align">
+                        <h1 id="title"></h1>
+                        <h4 id="entitle" class="grey-text text-darken"></h4>
+                    </div>
                 </div>
-                <div class="col s1"></div>
+                <div class="col s1 valign-wrapper left-align">
+                    <i class="unselectable large material-icons teal-text" onclick="javascript:window.location='/'">home</i>
+                </div>
           </div>
 
 
@@ -153,6 +269,44 @@
         <div id="owner" class="flow-text"></div>
         <div id="bt" class="flow-text"></div>
         <div id="owner" class="flow-text"></div>
+
+        <br>
+
+        <div class="divider"></div>
+
+        <h3>Comments: </h3>
+        <div class="row">
+            <form id="test_form" class="col s12" onsubmit="postComment();return false">
+                <div class="row">
+                    <div class="input-field col s3">
+                        <i class="material-icons prefix">account_circle</i>
+                        <input id="usrStr" type="text" class="validate">
+                        <label for="usrStr">username</label>
+                    </div>
+                    <div class=" right-align col s7">
+                    <a class="btn-floating btn-large waves-effect waves-light" onclick="loadComments()"><i class="large material-icons">cached</i></a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s6">
+                        <i class="material-icons prefix">mode_edit</i>
+                        <textarea id="textStr" class="materialize-textarea"></textarea>
+                        <label for="textStr">Message</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn waves-effect waves-light" type="submit" name="action" >Submit
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="comments"></div>
+
+        <br>
+        <br>
+        <br>
     </div>
 
     <script type="text/javascript" src="js/materialize.min.js"></script>

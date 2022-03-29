@@ -14,7 +14,9 @@ import ( // {{{
 	"github.com/gorilla/sessions"
 ) // }}}
 
-//TODO: implement audio commentary
+//TODO: implement websockets to notify user of new comments
+//TODO: prevent xss attacks in comments
+//TODO: set characetr limits on comment parameters
 
 var (
 	store   = sessions.NewCookieStore([]byte("like-cookies"))
@@ -36,6 +38,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", strings.Join(origin, ","))
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Content-Type", "application/json")
 
 		if r.Method == "OPTIONS" {
@@ -55,6 +58,7 @@ type ArtworkData struct {
 	Title          sql.NullString `db:"Title" json:"Title"`
 	YearOfCreation int            `db:"YearOfCreation" json:"YearOfCreation"`
 	Description    string         `db:"Description" json:"Description"`
+	Likes          int            `db:"Likes" json:"Likes"`
 	Owner          string         `db:"Owner" json:"Owner"`
 	BorrowedTo     sql.NullString `db:"BorrowedTo" json:"BorrowedTo"`
 	Artists        []string       `json:"Artists"`
@@ -95,7 +99,8 @@ func getAllArtwork(w http.ResponseWriter, r *http.Request) {
 			YearOfCreation,
 			Description,
 			Owner,
-			BorrowedTo
+			BorrowedTo,
+			Likes
 		FROM Artworks`)
 
 	if err != nil {
@@ -106,7 +111,7 @@ func getAllArtwork(w http.ResponseWriter, r *http.Request) {
 	for res.Next() {
 		var tmp ArtworkData
 
-		err := res.Scan(&tmp.Id, &tmp.OriginalTitle, &tmp.Title, &tmp.YearOfCreation, &tmp.Description, &tmp.Owner, &tmp.BorrowedTo)
+		err := res.Scan(&tmp.Id, &tmp.OriginalTitle, &tmp.Title, &tmp.YearOfCreation, &tmp.Description, &tmp.Owner, &tmp.BorrowedTo, &tmp.Likes)
 
 		if err != nil {
 			httpError(&w, 500, err)
@@ -202,6 +207,105 @@ func getAllArtwork(w http.ResponseWriter, r *http.Request) {
 	httpSuccessRaw(&w, 200, string(ret))
 }
 
+func getAllArtworkRanked(w http.ResponseWriter, r *http.Request) {
+	Debugln("endpoint hit: getAllArtwork")
+
+	/* open db */
+	db, err := sql.Open("mysql", databaseString)
+
+	if err != nil {
+		httpError(&w, 500, AppendError("getAllArtwork [opening db]: ", err).Error())
+		return
+	}
+
+	defer db.Close()
+
+	/* get artworks */
+	var artworks []*ArtworkData
+
+	res, err := db.Query(`
+		SELECT
+			Id,
+			OriginalTitle,
+			Likes
+		FROM Artworks
+		ORDER BY Likes DESC`)
+
+	if err != nil {
+		httpError(&w, 500, err.Error())
+		return
+	}
+
+	for res.Next() {
+		var tmp ArtworkData
+
+		err := res.Scan(&tmp.Id, &tmp.OriginalTitle, &tmp.Likes)
+
+		if err != nil {
+			httpError(&w, 500, err)
+			return
+		}
+
+		artworks = append(artworks, &tmp)
+	}
+
+	/* append artists */
+	for _, artwork := range artworks {
+
+		imageId := artwork.Id
+
+		/* get artists name */
+		var artist ArtistData
+
+		res, err := db.Query(`
+			SELECT Name, SecondName, Surname
+			FROM Artists
+			WHERE Id IN (
+				SELECT ArtistId
+				FROM CreatedBy
+				WHERE ArtworkId = (
+					SELECT Id
+					FROM Artworks
+					WHERE Id = ?
+				)
+			)`, imageId)
+
+		if err != nil {
+			httpError(&w, 500, err.Error())
+			return
+		}
+
+		for res.Next() {
+
+			err := res.Scan(&artist.Name, &artist.SecondName, &artist.Surname)
+
+			if err != nil {
+				httpError(&w, 500, err)
+				return
+			}
+
+			namestr := artist.Name
+			if artist.SecondName.Valid {
+				namestr += " " + artist.SecondName.String
+			}
+			namestr += " " + artist.Surname
+
+			artwork.Artists = append(artwork.Artists, namestr)
+		}
+
+	}
+
+	/* return json */
+	ret, err := json.Marshal(artworks)
+
+	if err != nil {
+		httpError(&w, 500, err.Error())
+		return
+	}
+
+	httpSuccessRaw(&w, 200, string(ret))
+}
+
 func getSingleArtwork(w http.ResponseWriter, r *http.Request) {
 	Debugln("endpoint hit: getSingleArtwork")
 
@@ -230,12 +334,13 @@ func getSingleArtwork(w http.ResponseWriter, r *http.Request) {
 			YearOfCreation,
 			Description,
 			Owner,
-			BorrowedTo
+			BorrowedTo,
+			Likes
 		FROM Artworks
-		WHERE Id = ?`, imageId).Scan(&artwork.Id, &artwork.OriginalTitle, &artwork.Title, &artwork.YearOfCreation, &artwork.Description, &artwork.Owner, &artwork.BorrowedTo)
+		WHERE Id = ?`, imageId).Scan(&artwork.Id, &artwork.OriginalTitle, &artwork.Title, &artwork.YearOfCreation, &artwork.Description, &artwork.Owner, &artwork.BorrowedTo, &artwork.Likes)
 
 	if err == sql.ErrNoRows {
-		httpError(&w, 400, "no entries")
+		httpError(&w, 404, "no entries")
 		return
 	}
 
@@ -323,8 +428,8 @@ func getSingleArtwork(w http.ResponseWriter, r *http.Request) {
 	httpSuccessRaw(&w, 200, string(ret))
 }
 
-func getLike(w http.ResponseWriter, r *http.Request) {
-	Debugln("endpoint hit: getLike")
+func getLikeStatus(w http.ResponseWriter, r *http.Request) {
+	Debugln("endpoint hit: getLikeStatus")
 
 	/* get delected id */
 	vars := mux.Vars(r)
@@ -339,6 +444,35 @@ func getLike(w http.ResponseWriter, r *http.Request) {
 	httpSuccessf(&w, 200, `"Value":%v`, session.Values[imageId])
 }
 
+func getLikeNumber(w http.ResponseWriter, r *http.Request) {
+	Debugln("endpoint hit: getLikeNumber")
+
+	/* get delected id */
+	vars := mux.Vars(r)
+	imageId := vars["id"]
+
+	/* open db */
+	db, err := sql.Open("mysql", databaseString)
+
+	if err != nil {
+		httpError(&w, 500, AppendError("getLikeNumber [opening db]: ", err).Error())
+		return
+	}
+
+	defer db.Close()
+
+	var liken int
+
+	err = db.QueryRow(`SELECT Likes FROM Artworks WHERE Id = ?`, imageId).Scan(&liken)
+
+	if err != nil {
+		httpError(&w, 500, AppendError("getLikeNumber [querying db]: ", err).Error())
+		return
+	}
+
+	httpSuccessf(&w, 200, `"Value":%v`, liken)
+}
+
 func toggleLike(w http.ResponseWriter, r *http.Request) {
 	Debugln("endpoint hit: toggleLike")
 
@@ -346,9 +480,6 @@ func toggleLike(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	imageId := vars["id"]
 	session, _ := store.Get(r, "like-cookies")
-
-	Debugln(imageId)
-	Debugln(session.Values)
 
 	var likeStatus bool
 
@@ -449,6 +580,13 @@ func getcomment(w http.ResponseWriter, r *http.Request) {
 	/* open db */
 	db, err := sql.Open("mysql", databaseString)
 
+	if err != nil {
+		httpError(&w, 500, AppendError("postcomment [opening db]: ", err).Error())
+		return
+	}
+
+	defer db.Close()
+
 	res, err := db.Query(`SELECT Username, Comment FROM Comments WHERE ArtworkId = ?`, imageId)
 
 	if err != nil {
@@ -485,13 +623,15 @@ func handleRequests() {
 
 	myRouter.HandleFunc("/", homePage) //.Schemes("https")
 	myRouter.HandleFunc("/togglelike/{id}", toggleLike).Methods("POST", "OPTIONS")
-	myRouter.HandleFunc("/getlike/{id}", getLike).Methods("GET", "OPTIONS")
+	myRouter.HandleFunc("/getlikestatus/{id}", getLikeStatus).Methods("GET", "OPTIONS")
+	myRouter.HandleFunc("/getlikenumber/{id}", getLikeNumber).Methods("GET", "OPTIONS")
 
-	comments := myRouter.PathPrefix("/com/").Subrouter()
-	comments.HandleFunc("/postcomment/{id}", postcomment).Methods("POST", "OPTIONS")
-	comments.HandleFunc("/getcomment/{id}", getcomment).Methods("GET", "OPTIONS")
+	comments := myRouter.PathPrefix("/comment/").Subrouter()
+	comments.HandleFunc("/post/{id}", postcomment).Methods("POST", "OPTIONS")
+	comments.HandleFunc("/getall/{id}", getcomment).Methods("GET", "OPTIONS")
 
 	artData := myRouter.PathPrefix("/art").Subrouter()
+	artData.HandleFunc("/getartworkranked", getAllArtworkRanked).Methods("GET", "OPTIONS")
 	artData.HandleFunc("/getartwork", getAllArtwork).Methods("GET", "OPTIONS")
 	artData.HandleFunc("/getartwork/{id}", getSingleArtwork).Methods("GET", "OPTIONS")
 

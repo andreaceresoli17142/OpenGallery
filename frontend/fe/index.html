@@ -2,19 +2,226 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"
-    ><!--Import Google Icon Font-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!--Import Google Icon Font-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!--Import materialize.css-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Compiled and minified CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
 
-    <!-- Compiled and minified JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
     <title>OpenGallery</title>
+
+    <style>
+        .transparentBG {
+            background-color: rgba(94, 94, 94, 0.76);
+            border-radius: 0px 250px 250px 0px;
+        }
+        .test {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .outercontainer{
+            overflow-x: scroll;
+            position: relative;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .outercontainer::-webkit-scrollbar { display: none;}
+
+        .innercontainer {
+            /* display: flex; */
+            flex-flow: row;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="card-panel teal lighten-2">This is a card panel with a teal lighten-2 class</div>
+
+    <script>
+
+        var myHeaders = new Headers();
+
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch("http://localhost:8080/art/getartwork", requestOptions)
+        .then(response => {
+
+            if (response.status === 404){
+                window.location.replace("404.html");
+                return
+            }
+            return response.text()
+        })
+        .then(result => {
+            var marsh = JSON.parse(result)
+            marsh.forEach(element => handleReq(element));
+        })
+        .catch(error => console.log(error));
+
+        function handleReq(datArr){
+
+            var likestatus
+            // var likenumber
+
+            // get star status
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow',
+                credentials: 'include'
+            };
+
+            fetch("http://localhost:8080/getlikestatus/"+datArr.Id, requestOptions)
+            .then(response => response.text())
+            .then(result => handleLike(JSON.parse(result), datArr.Id))
+            .catch(error => console.log('error', error));
+
+            var artists = ""
+
+            datArr.Artists.forEach(element => {
+                artists += "<div class='chip'>"+element+"</div>"
+            });
+
+            document.getElementById("card").innerHTML += `
+            <div class="col s6">
+                 <div class="row">
+                    <div class="col s12" style="padding:25px;">
+                    <div class="card">
+                        <div class="card-image">
+                        <img src="assets/${datArr.Pictures[0]}" onclick="javascript:window.location='/artwork.html#${datArr.Id}';">
+                        <span class="card-title transparentBG" onclick="javascript:window.location='/artwork.html#${datArr.Id}';">${datArr.OriginalTitle}</span>
+                        <a id="${datArr.Id}starbtn" class="btn-floating halfway-fab waves-effect waves-light" onclick="toggleLike(${datArr.Id})"><i id="${datArr.Id}star" class="material-icons">star</i></a>
+                        </div>
+                        <div class="card-content" onclick="javascript:window.location='/artwork.html#${datArr.Id}';">
+                        ${artists}
+                        <p class="truncate">
+                            ${datArr.Description}
+                        <p>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            `
+        }
+
+
+        function handleLike(resp, id){
+            if (resp.Value){
+                document.getElementById(id+"star").classList.add('amber-text');
+                return
+            }
+            document.getElementById(id+"star").classList.remove('amber-text')
+        }
+
+        function toggleLike(artworkid){
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                redirect: 'follow',
+                credentials: 'include'
+            };
+
+            fetch("http://localhost:8080/togglelike/"+artworkid, requestOptions)
+            .then(response => response.text())
+            .then(result => handleLike(JSON.parse(result), artworkid))
+            .catch(error => console.log('error', error));
+        }
+
+        window.onload = () => {
+                document.onwheel = customScrollFunction;
+
+                function customScrollFunction(event){
+
+            let deltaY = event.deltaY;
+            let deltaYSign = Math.sign(deltaY);
+
+            if(deltaYSign==-1){
+                document.getElementById("scrl1").scrollBy({
+                    top: 0,
+                    left: -169,
+                    behavior: 'auto'
+                });
+
+            }else{
+                document.getElementById("scrl1").scrollBy({
+                    top: 0,
+                    left: 169,
+                    behavior: 'auto'
+                });
+            }
+            }
+        }
+
+        $(document).ready(function(){
+            $('.fixed-action-btn').floatingActionButton({
+            // specify options here
+            });
+        });
+    </script>
+
+    <div class="test">
+        <div id="titles" class="center-align" style="padding: 30px;">
+            <div class="center-align">
+                <h1>Open Gallery</h1>
+                <h4 class="grey-text text-darken">free art for all</h4>
+            </div>
+            <br>
+            <div class="row">
+                <div class="center-align">
+                    <div class="col s2"></div>
+                    <div class="col s8">
+                        <div class="divider"></div>
+                    </div>
+                    <div class="col s2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <br>
+    <br> -->
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <div class="outercontainer" id="scrl1">
+        <div class="innercontainer">
+            <div id="card" class="row valign-wrapper"></div>
+        </div>
+    </div>
+
+
+    <div class="fixed-action-btn">
+        <a class="btn-floating btn-large">
+        <i class="large material-icons">more_vert</i>
+        </a>
+        <ul>
+        <li><a class="btn-floating amber" onclick="javascript:window.location='/ranking.html';"><i class="material-icons">insert_chart</i></a></li>
+        </ul>
+    </div>
+
+    <script type="text/javascript" src="js/materialize.min.js"></script>
 </body>
 </html>
