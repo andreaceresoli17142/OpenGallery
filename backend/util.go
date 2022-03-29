@@ -124,6 +124,7 @@ func httpSuccessRaw(w *http.ResponseWriter, code int, s string) {
 func httpSuccessf(w *http.ResponseWriter, code int, s string, args ...interface{}) {
 	(*w).Header().Set("Content-Type", "application/json")
 	(*w).WriteHeader(code)
+	Debugln((*w).Header()["Set-Cookie"])
 	rs := fmt.Sprintf(s, args...)
 	fmt.Fprintf((*w), `{"code": %d, %s}`, code, rs)
 }

@@ -347,7 +347,10 @@ func toggleLike(w http.ResponseWriter, r *http.Request) {
 	imageId := vars["id"]
 	session, _ := store.Get(r, "like-cookies")
 
-	likeStatus := true
+	Debugln(imageId)
+	Debugln(session.Values)
+
+	var likeStatus bool
 
 	/* open db */
 	db, err := sql.Open("mysql", databaseString)
@@ -367,7 +370,7 @@ func toggleLike(w http.ResponseWriter, r *http.Request) {
 			httpError(&w, 500, AppendError("toggleLike [adding like db]: ", err).Error())
 			return
 		}
-
+		likeStatus = true
 		session.Values[imageId] = true
 	} else {
 
@@ -382,7 +385,10 @@ func toggleLike(w http.ResponseWriter, r *http.Request) {
 		session.Values[imageId] = false
 	}
 
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		httpError(&w, 500, AppendError("toggleLike [saving session]: ", err).Error())
+	}
 	httpSuccessf(&w, 200, `"Value":%v`, likeStatus)
 }
 
@@ -493,6 +499,12 @@ func handleRequests() {
 } // }}}
 
 func init() {
+
+	store.Options = &sessions.Options{
+		Domain:   "localhost",
+		Path:     "/",
+		HttpOnly: true,
+	}
 
 	ok := loadEnv()
 
