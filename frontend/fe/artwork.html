@@ -182,8 +182,11 @@
             .then(result => {
                 var marsh = JSON.parse(result)
                 console.log(marsh)
-                comment = `<blockquote class="flow-text">${textStr}<br>- &nbsp${usrStr}</blockquote><br>`
+                comment = `<blockquote class="flow-text blockquote_teal">${textStr}<br>- &nbsp${usrStr}</blockquote><br>`
                 if (marsh.code == 200) {
+
+                    document.getElementById("usrStr").value = ""
+                    document.getElementById("textStr").value = ""
                     if (document.getElementById("comments").Value == `
                     <div class="flow-text">
                         hey, no one has commented yet, you can be the first!
